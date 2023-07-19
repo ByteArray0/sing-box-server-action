@@ -46,13 +46,13 @@ jobs:
              cp geoip.db geosite.db ~/go/bin/windows_amd64;
              cd ~/go/bin/ && tar -zcvf sing-box-linux-amd64.tar.gz sing-box geoip.db geosite.db;
              cd ~/go/bin/linux_arm64 && tar -zcvf sing-box-linux-arm64.tar.gz sing-box geoip.db geosite.db;
-             cd ~/go/bin/windows_amd64 && tar -zcvf sing-box-windows-x64.tar.gz sing-box.exe geoip.db geosite.db;
+             cd ~/go/bin/windows_amd64 && tar -zcvf sing-box-windows-amd64.tar.gz sing-box.exe geoip.db geosite.db;
       - name: Collect packages
         run: |
              mkdir release;
              mv ~/go/bin/sing-box-linux-amd64.tar.gz release
              mv ~/go/bin/linux_arm64/sing-box-linux-arm64.tar.gz release
-             mv ~/go/bin/windows_amd64/sing-box-windows-x64.tar.gz release
+             mv ~/go/bin/windows_amd64/sing-box-windows-amd64.tar.gz release
       - name: Read current version
         id: version
         run: cat version >> $GITHUB_OUTPUT
