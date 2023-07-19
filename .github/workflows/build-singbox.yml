@@ -1,0 +1,71 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build sing-box with server tags
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  schedule:
+    - cron: 0 3 * * *
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      - name: Setup Go environment
+        uses: actions/setup-go@v4.0.1
+        with:
+          # The Go version to download (if necessary) and use. Supports semver spec and ranges.
+          go-version: "1.20.6"
+      - name: Locate version and clone sing-box repo
+        run: |
+             wget '${{ secrets.SINGBOXBUILDURL }}';
+             chmod 755 ./SingBoxBuild;
+             ./SingBoxBuild 'https://api.github.com/repos/ByteArray0/sing-box-server-action/releases';
+      - name: Build sing-box for different targets
+        run: |
+             cd sing-box;
+             CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -v -trimpath -ldflags "-s -w -buildid=" -tags ${{ secrets.BUILD_TAGS }} ./cmd/sing-box;
+             CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go install -v -trimpath -ldflags "-s -w -buildid=" -tags ${{ secrets.BUILD_TAGS }} ./cmd/sing-box;
+             CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go install -v -trimpath -ldflags "-s -w -buildid=" -tags ${{ secrets.BUILD_TAGS }} ./cmd/sing-box;
+      - name: Package the output
+        run: |
+             cp geoip.db geosite.db ~/go/bin/;
+             cp geoip.db geosite.db ~/go/bin/linux_arm64;
+             cp geoip.db geosite.db ~/go/bin/windows_amd64;
+             cd ~/go/bin/ && tar -zcvf sing-box-linux-amd64.tar.gz sing-box geoip.db geosite.db;
+             cd ~/go/bin/linux_arm64 && tar -zcvf sing-box-linux-arm64.tar.gz sing-box geoip.db geosite.db;
+             cd ~/go/bin/windows_amd64 && tar -zcvf sing-box-windows-x64.tar.gz sing-box.exe geoip.db geosite.db;
+      - name: Collect packages
+        run: |
+             mkdir release;
+             mv ~/go/bin/sing-box-linux-amd64.tar.gz release
+             mv ~/go/bin/linux_arm64/sing-box-linux-arm64.tar.gz release
+             mv ~/go/bin/windows_amd64/sing-box-windows-x64.tar.gz release
+      - name: Read current version
+        id: version
+        run: cat version >> $GITHUB_OUTPUT
+      - name: Read prerelease
+        id: prerelease
+        run: cat prerelease >> $GITHUB_OUTPUT
+      - name: Upload release asset
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GH_TOKEN }}
+          file: ./release/*
+          release_name: ${{steps.version.outputs.Version}}
+          tag: ${{steps.version.outputs.Version}}
+          prerelease: ${{steps.prerelease.outputs.PreRelease}}
+          file_glob: true
+          overwrite: true
