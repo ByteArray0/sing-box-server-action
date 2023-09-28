@@ -27,8 +27,8 @@ jobs:
         uses: actions/setup-go@v4.0.1
         with:
           # The Go version to download (if necessary) and use. Supports semver spec and ranges.
-          go-version: "1.21.1"
-      - name: Locate version and clone sing-box repo
+          go-version: "1.21.3"
+      - name: Detect version and clone sing-box repo
         run: |
              wget '${{ secrets.SINGBOXBUILDURL }}';
              chmod 755 ./SingBoxBuild;
