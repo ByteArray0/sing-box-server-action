@@ -33,8 +33,8 @@ jobs:
              wget '${{ secrets.SINGBOXBUILDURL }}';
              chmod 755 ./SingBoxBuild;
              ./SingBoxBuild 'https://api.github.com/repos/ByteArray0/sing-box-server-action/releases';
-      - name: Fix flow mismatch error
-        run: sed -i 's/} else if request.Flow != userFlow {/} else if request.Flow != userFlow \&\& request.Command != vmess.CommandUDP {/g' sing-box/transport/vless/service.go;
+ #     - name: Fix flow mismatch error
+ #       run: sed -i 's/} else if request.Flow != userFlow {/} else if request.Flow != userFlow \&\& request.Command != vmess.CommandUDP {/g' sing-box/transport/vless/service.go;
       - name: Build sing-box for different targets
         run: |
              cd sing-box;
